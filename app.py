@@ -1,18 +1,16 @@
 import gradio as gr
-from router import route_message
+from modules.form_manager import handle_form
+from modules.intent_guide import detect_intent
 
-chat_history = []
+session_id = "demo"
 
-with gr.Blocks() as demo:
-    chatbot = gr.Chatbot()
-    msg = gr.Textbox(label="Ask Buck a question about your insurance")
+def chatbot(user_input):
+    intent = detect_intent(user_input)
+    if intent == "unknown":
+        return "Can you clarify what you'd like help with?"
+    elif intent == "out_of_scope":
+        return "I'm here to help with The Hartford's auto insurance. Would you like to ask about coverage, purchase a policy, or file a claim?"
+    return handle_form(session_id, intent, user_input)
 
-    def respond(user_input):
-        global chat_history
-        response = route_message(user_input, chat_history)
-        chat_history.append((user_input, response))
-        return chat_history
-
-    msg.submit(respond, inputs=msg, outputs=chatbot)
-
-demo.launch()
+iface = gr.ChatInterface(fn=chatbot, title="Buck - Auto Insurance Assistant")
+iface.launch()
